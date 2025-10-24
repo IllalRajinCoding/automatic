@@ -1,44 +1,38 @@
-name: Auto commit
+name: Auto Commit
 
 on:
   push:
     branches:
-      - master
+      - main
   schedule:
-    - cron: "0 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15 * * *" # Every hour from 1 AM to 3 PM daily'
+    - cron: "0 1-15 * * *"
 
 jobs:
   auto_commit:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # penting agar bisa push dengan GITHUB_TOKEN
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
-          persist-credentials: false
           fetch-depth: 0
 
-      - name: Modify last update
+      - name: Update timestamp file
         id: set_time
         run: |
-          # produce an ISO8601 UTC timestamp and expose it as a step output
           d=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
-          echo "time=$d" >> $GITHUB_OUTPUT
           echo "$d" > richest_last_update.txt
+          echo "time=$d" >> "$GITHUB_OUTPUT"
 
-      - name: Commit files changes
-        env:
-          TIME: ${{ steps.set_time.outputs.time }}
+      - name: Commit changes
         run: |
-          git config --global --add safe.directory /github/workspace
-          git config --local user.name 'Robbanie'
-          git config --local user.email 'roxyuciha@gmail.com'
-          # Use the timestamp from the previous step output for the commit message
-          d="${TIME:-$(cat richest_last_update.txt || true)}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          
           git add richest_last_update.txt
-          git commit -m "Auto update last update time to $d" || echo "No changes to commit"
+          git commit -m "Auto update: ${{ steps.set_time.outputs.time }}" || echo "No changes to commit"
 
-      - name: push
-        uses: ad-m/github-push-action@v0.6.0
-        with:
-          force: true
-          directory: .
-          github_token: ${{ secrets.PERSONAL_TOKEN || secrets.GITHUB_TOKEN }}
+      - name: Push changes
+        run: |
+          git push origin HEAD:main
