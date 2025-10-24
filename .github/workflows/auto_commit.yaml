@@ -24,8 +24,8 @@ jobs:
       - name: Commit files changes
         run: |
           git config --global --add safe.directory /github/workspace
-          git config --global user.name 'Robbanie'
-          git config --global user.email 'roxyuciha@gmail.com'
+          git config --local user.name 'Robbanie'
+          git config --local user.email 'roxyuciha@gmail.com'
           # Use the timestamp written in the previous step for the commit message
           d=$(cat richest_last_update.txt || true)
           git add richest_last_update.txt
