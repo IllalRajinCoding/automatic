@@ -10,29 +10,33 @@ on:
 jobs:
   auto_commit:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write  # penting agar bisa push dengan GITHUB_TOKEN
+    
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Check repository
+        uses: actions/checkout@v2
         with:
-          fetch-depth: 0
-
-      - name: Update timestamp file
-        id: set_time
+           ref: master
+      
+      - name: Create file and commit
         run: |
-          d=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
-          echo "$d" > richest_last_update.txt
-          echo "time=$d" >> "$GITHUB_OUTPUT"
-
-      - name: Commit changes
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          
-          git add richest_last_update.txt
-          git commit -m "Auto update: ${{ steps.set_time.outputs.time }}" || echo "No changes to commit"
-
+          FILE="richest_people.txt"
+          if [ ! -f "$FILE" ]; then
+            echo "Creating $FILE" > "$FILE"
+            echo "commit:1" >> "$FILE"
+          else
+            CURRENT_COUNT=$(grep -oP 'commit:\K\d+' "$FILE")
+            if [ -z "$CURRENT_COUNT" ]; then
+              CURRENT_COUNT=0
+            fi
+            NEW_COUNT=$((CURRENT_COUNT + 1))
+            sed -i "s/commit:$CURRENT_COUNT/commit:$NEW_COUNT/" "$FILE"
+          fi
+          git config --global user.name "IllalRajinCoding"
+          git config --global user.email "roxyuciha@gmail.com"
+          git add "$FILE"
+          git commit -m "Auto commit: Updated $FILE"
+          git push origin master
       - name: Push changes
-        run: |
-          git push origin HEAD:main
+        uses: ad-m/github-push-action@v0.6.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
