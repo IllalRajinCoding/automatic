@@ -26,9 +26,10 @@ jobs:
           git config --global --add safe.directory /github/workspace
           git config --global user.name 'Robbanie'
           git config --global user.email 'roxyuciha@gmail.com'
+          # Use the timestamp written in the previous step for the commit message
+          d=$(cat richest_last_update.txt || true)
           git add richest_last_update.txt
           git commit -m "Auto update last update time to $d" || echo "No changes to commit"
-          git push origin master 
 
       - name: push
         uses: ad-m/github-push-action@v0.6.0
