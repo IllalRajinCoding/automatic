@@ -11,23 +11,28 @@ jobs:
   auto_commit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           persist-credentials: false
           fetch-depth: 0
 
       - name: Modify last update
+        id: set_time
         run: |
-          d=`date '+%Y-%m-%dT%H:%M:%SZ'`
-          echo $d > richest_last_update.txt
+          # produce an ISO8601 UTC timestamp and expose it as a step output
+          d=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
+          echo "time=$d" >> $GITHUB_OUTPUT
+          echo "$d" > richest_last_update.txt
 
       - name: Commit files changes
+        env:
+          TIME: ${{ steps.set_time.outputs.time }}
         run: |
           git config --global --add safe.directory /github/workspace
           git config --local user.name 'Robbanie'
           git config --local user.email 'roxyuciha@gmail.com'
-          # Use the timestamp written in the previous step for the commit message
-          d=$(cat richest_last_update.txt || true)
+          # Use the timestamp from the previous step output for the commit message
+          d="${TIME:-$(cat richest_last_update.txt || true)}"
           git add richest_last_update.txt
           git commit -m "Auto update last update time to $d" || echo "No changes to commit"
 
