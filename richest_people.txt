@@ -1,2 +1,2 @@
 Creating richest_people.txt
-commit:121
+commit:122
